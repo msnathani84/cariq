@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CarIQ — AI-Powered Used Car Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #F7F5F0; --surface: #FFFFFF; --surface2: #F0EDE8;
+    --border: #E0DDD8; --border2: #CBC8C2;
+    --text: #1A1816; --text2: #5C5A56; --text3: #9C9A96;
+    --accent: #C8813A; --accent-light: #FFF3E6; --accent-dark: #8A5520;
+    --green: #2D6A4F; --green-light: #E8F5EE;
+    --red: #A83232; --red-light: #FAEAEA;
+    --amber: #B57A18; --amber-light: #FEF7E4;
+    --blue: #1A4D8F; --blue-light: #EAF1FB;
+    --null-bg: #F4F2EE; --null-border: #D8D5CF; --null-text: #AEABA5;
+    --live: #2D6A4F; --live-bg: #E8F5EE;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  nav {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 2rem; display: flex; align-items: center;
+    justify-content: space-between; height: 64px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: 'DM Serif Display', serif; font-size: 22px; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    padding: 8px 20px; border-radius: 8px; border: none;
+    background: transparent; font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    color: var(--text2); transition: all 0.2s;
+  }
+  .nav-tab:hover { background: var(--surface2); color: var(--text); }
+  .nav-tab.active { background: var(--text); color: white; }
+  .nav-tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--accent-light); color: var(--accent-dark); font-weight: 500; border: 1px solid #F0C890; }
+
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  .hero-band { background: var(--text); color: white; padding: 2.5rem 2rem 2rem; }
+  .hero-band h1 { font-family: 'DM Serif Display', serif; font-size: 28px; font-weight: 400; line-height: 1.3; margin-bottom: 6px; }
+  .hero-band p { font-size: 14px; color: rgba(255,255,255,0.5); }
+  .hero-band-seller { background: linear-gradient(135deg, #1A3A2A 0%, #0D2018 100%); }
+
+  .module-status-bar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 8px 2rem; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  }
+  .module-status-bar span { font-size: 11px; font-weight: 500; color: var(--text3); }
+  .ms-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500;
+  }
+  .ms-live { background: var(--live-bg); color: var(--live); border: 1px solid #B0D9C2; }
+  .ms-pending { background: var(--null-bg); color: var(--null-text); border: 1px solid var(--null-border); }
+
+  .layout { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 64px - 96px); }
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 1.5rem; overflow-y: auto; }
+  .sidebar-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin-bottom: 1rem; }
+  .main-panel { padding: 2rem; }
+
+  .listing-card {
+    border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+    margin-bottom: 10px; cursor: pointer; transition: all .18s; background: var(--surface);
+  }
+  .listing-card:hover { border-color: var(--border2); background: var(--surface2); }
+  .listing-card.selected { border-color: var(--accent); background: var(--accent-light); }
+  .listing-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .listing-name { font-size: 14px; font-weight: 600; }
+  .listing-price { font-size: 15px; font-weight: 600; color: var(--accent-dark); }
+  .listing-meta { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .listing-badges { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .badge-fuel { background: var(--blue-light); color: var(--blue); border: 1px solid #C0D4F5; }
+  .badge-city { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .badge-body { background: var(--accent-light); color: var(--accent-dark); border: 1px solid #F0C890; }
+  .badge-tier1 { background: #EAF1FB; color: #1A4D8F; border: 1px solid #C0D4F5; }
+  .badge-tier2 { background: var(--amber-light); color: var(--amber); border: 1px solid #F0D090; }
+  .badge-tier3 { background: var(--null-bg); color: var(--null-text); border: 1px solid var(--null-border); }
+  .badge-fraud-ok { background: var(--green-light); color: var(--green); border: 1px solid #B0D9C2; }
+  .badge-fraud-warn { background: var(--red-light); color: var(--red); border: 1px solid #F0BEBE; }
+  .badge-cond-good { background: var(--green-light); color: var(--green); border: 1px solid #B0D9C2; }
+  .badge-cond-avg { background: var(--amber-light); color: var(--amber); border: 1px solid #F0D090; }
+  .badge-cond-poor { background: var(--red-light); color: var(--red); border: 1px solid #F0BEBE; }
+  .badge-null { background: var(--null-bg); color: var(--null-text); border: 1px solid var(--null-border); }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 400px; color: var(--text3); text-align: center; }
+  .empty-icon { font-size: 40px; margin-bottom: 1rem; opacity: .4; }
+  .empty-state h3 { font-size: 16px; font-weight: 500; margin-bottom: 6px; color: var(--text2); }
+  .empty-state p { font-size: 13px; }
+
+  .detail-header { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; }
+  .detail-title { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; margin-bottom: 4px; }
+  .detail-subtitle { font-size: 13px; color: var(--text2); }
+  .detail-price-main { font-size: 26px; font-weight: 600; color: var(--accent-dark); }
+  .detail-price-label { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; margin-top: 1.5rem; padding-left: 2px; }
+  .section-label:first-of-type { margin-top: 0; }
+
+  .model-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .model-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; position: relative; overflow: hidden; }
+  .model-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .model-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .model-card-title { font-size: 12px; font-weight: 600; color: var(--text2); line-height: 1.3; }
+  .model-null { background: var(--null-bg); border: 1px dashed var(--null-border); }
+  .model-null .model-card-title { color: var(--null-text); }
+  .model-null .model-icon { background: var(--surface); opacity: .5; }
+  .null-value { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--null-text); margin-bottom: 4px; }
+  .null-sublabel { font-size: 11px; color: var(--null-text); padding: 4px 10px; background: var(--surface); border-radius: 20px; display: inline-block; border: 1px solid var(--null-border); }
+  .pending-pill { position: absolute; top: 10px; right: 10px; font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--amber-light); color: var(--amber); font-weight: 600; border: 1px solid #F0D090; letter-spacing: .05em; text-transform: uppercase; }
+  .live-pill { position: absolute; top: 10px; right: 10px; font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--live-bg); color: var(--live); font-weight: 600; border: 1px solid #B0D9C2; letter-spacing: .05em; text-transform: uppercase; }
+  .model-value { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); margin-bottom: 4px; line-height: 1.2; }
+  .model-sublabel { font-size: 12px; color: var(--text3); }
+
+  /* FIX 11: Adjustment breakdown strip inside price card */
+  .adj-strip {
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .adj-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: var(--text3);
+  }
+  .adj-row .adj-label { display: flex; align-items: center; gap: 4px; }
+  .adj-row .adj-val { font-weight: 600; color: var(--accent-dark); }
+  .adj-row .adj-val.positive::before { content: '+'; }
+  .adj-tag {
+    font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600;
+    background: var(--accent-light); color: var(--accent-dark); border: 1px solid #F0C890;
+  }
+
+  .fraud-alert-banner {
+    background: var(--red-light); border: 1px solid #F0BEBE; border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 12px;
+  }
+  .fraud-alert-banner .fraud-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .fraud-alert-banner .fraud-title { font-size: 14px; font-weight: 600; color: var(--red); margin-bottom: 3px; }
+  .fraud-alert-banner .fraud-body { font-size: 12px; color: var(--red); opacity: .8; line-height: 1.5; }
+
+  .tco-card { background: var(--text); color: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .tco-title { font-family: 'DM Serif Display', serif; font-size: 15px; font-weight: 400; color: rgba(255,255,255,.55); margin-bottom: 1rem; }
+  .tco-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
+  .tco-item label { font-size: 11px; color: rgba(255,255,255,.4); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .06em; }
+  .tco-item .tco-val { font-family: 'DM Serif Display', serif; font-size: 22px; color: white; }
+  .tco-item.null .tco-val { color: rgba(255,255,255,.2); font-size: 18px; }
+  .tco-divider { border: none; border-top: 1px solid rgba(255,255,255,.1); margin: 1rem 0; }
+  .tco-total label { font-size: 12px; color: rgba(255,255,255,.5); margin-bottom: 4px; display: block; }
+  .tco-total .tco-val { font-family: 'DM Serif Display', serif; font-size: 30px; color: #FFD08A; }
+
+  /* FIX 12: Fair price row now shows adjusted price prominently */
+  .fair-price-row {
+    background: var(--accent-light); border: 1px solid #F0C890; border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 1.5rem; display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+  }
+  .fair-price-row .fpr-item label { font-size: 10px; color: var(--accent-dark); text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 2px; }
+  .fair-price-row .fpr-item .fpr-val { font-size: 15px; font-weight: 600; color: var(--accent-dark); }
+  .fair-price-row .fpr-item .fpr-sub { font-size: 11px; color: var(--accent); margin-top: 1px; }
+  .price-label-pill { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .price-under { background: var(--green-light); color: var(--green); border: 1px solid #B0D9C2; }
+  .price-fair  { background: var(--blue-light);  color: var(--blue);  border: 1px solid #C0D4F5; }
+  .price-over  { background: var(--red-light);   color: var(--red);   border: 1px solid #F0BEBE; }
+
+  .seller-form { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--border2);
+    border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+    background: var(--bg); color: var(--text); outline: none; transition: border-color .2s;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); background: var(--surface); }
+  .form-group.full { grid-column: 1 / -1; }
+  .btn-primary { background: var(--text); color: white; border: none; padding: 11px 24px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity .2s; }
+  .btn-primary:hover { opacity: .85; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-danger { background: var(--red); color: white; border: none; padding: 7px 14px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; opacity: .8; }
+  .btn-danger:hover { opacity: 1; }
+  .btn-row { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
+
+  .upload-zone {
+    border: 1.5px dashed var(--border2); border-radius: 10px;
+    padding: 1.5rem; text-align: center; color: var(--text3); font-size: 13px;
+    cursor: pointer; background: var(--null-bg); transition: all .2s; position: relative;
+  }
+  .upload-zone:hover { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-light); }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .upload-zone .upload-icon { font-size: 28px; margin-bottom: 8px; opacity: .4; }
+  .upload-zone.has-file { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .upload-zone.has-file .upload-icon { opacity: 1; }
+
+  .opencv-notice {
+    background: var(--amber-light); border: 1px solid #F0D090; border-radius: 8px;
+    padding: 10px 14px; font-size: 12px; color: var(--amber); margin-bottom: 14px;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+
+  .my-listing-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .my-listing-row:last-child { border-bottom: none; }
+  .my-listing-name { font-size: 14px; font-weight: 500; }
+  .my-listing-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .stat-box { background: var(--surface2); border-radius: 10px; padding: 12px 14px; border: 1px solid var(--border); }
+  .stat-box label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .06em; }
+  .stat-box .val { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); }
+
+  .cond-bar-wrap { margin: 8px 0 4px; }
+  .cond-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+  .cond-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+
+  .filter-row { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .filter-chip { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
+  .filter-chip:hover { border-color: var(--accent); color: var(--accent-dark); }
+  .filter-chip.active { background: var(--text); color: white; border-color: var(--text); }
+
+  .search-wrap { position: relative; }
+  .search-input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--border2); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; background: var(--bg); color: var(--text); outline: none; margin-bottom: 1rem; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; pointer-events: none; }
+
+  .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--text); color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 999; display: none; animation: slideUp .3s ease; max-width: 320px; }
+  .toast.show { display: block; }
+  @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  .loading { text-align: center; padding: 2rem; color: var(--text3); font-size: 13px; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .model-card { cursor: pointer; transition: all .18s !important; }
+  .model-card:hover { border-color: var(--accent) !important; box-shadow: 0 2px 12px rgba(200,129,58,.15); transform: translateY(-1px); }
+  .model-card:hover::after {
+    content: '↗ How this works';
+    position: absolute; bottom: 8px; right: 10px;
+    font-size: 10px; color: var(--accent-dark); font-weight: 500;
+    font-family: 'DM Sans', sans-serif; letter-spacing: .02em;
+    animation: fadeIn .15s ease;
+  }
+  .fair-price-row { cursor: pointer; transition: all .18s; }
+  .fair-price-row:hover { border-color: var(--accent-dark) !important; }
+  .tco-card { cursor: pointer; transition: opacity .18s; }
+  .tco-card:hover { opacity: .9; }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(26,24,22,.55); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; padding: 1.5rem;
+  }
+  .modal-overlay.open { display: flex; animation: modalFadeIn .2s ease; }
+  @keyframes modalFadeIn { from { opacity:0; } to { opacity:1; } }
+
+  .modal-box {
+    background: var(--surface); border-radius: 16px; max-width: 780px; width: 100%;
+    max-height: 88vh; overflow-y: auto; border: 1px solid var(--border);
+    box-shadow: 0 24px 80px rgba(0,0,0,.18);
+    animation: modalSlideIn .22s ease;
+  }
+  @keyframes modalSlideIn { from { opacity:0; transform:translateY(14px) scale(.98); } to { opacity:1; transform:none; } }
+
+  .modal-header {
+    padding: 1.5rem 1.5rem 1rem; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: flex-start;
+    position: sticky; top: 0; background: var(--surface); z-index: 1; border-radius: 16px 16px 0 0;
+  }
+  .modal-header-left { display: flex; align-items: center; gap: 12px; }
+  .modal-header-icon { font-size: 28px; }
+  .modal-header-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; line-height: 1.2; }
+  .modal-header-sub { font-size: 12px; color: var(--text3); margin-top: 3px; }
+  .modal-close {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; color: var(--text2); flex-shrink: 0;
+    transition: all .15s;
+  }
+  .modal-close:hover { background: var(--text); color: white; border-color: var(--text); }
+
+  .modal-body { padding: 1.5rem; }
+
+  .modal-result-hero {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.25rem; margin-bottom: 1.5rem; display: flex; gap: 2rem; flex-wrap: wrap;
+  }
+  .mrh-item label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); display: block; margin-bottom: 4px; }
+  .mrh-item .mrh-val { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); }
+  .mrh-item .mrh-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  .explain-section { margin-bottom: 1.5rem; }
+  .explain-section-title {
+    font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 10px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .explain-section p { font-size: 13px; color: var(--text2); line-height: 1.65; margin-bottom: 8px; }
+  .explain-section p:last-child { margin-bottom: 0; }
+  .explain-section strong { color: var(--text); font-weight: 600; }
+
+  .metric-pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .metric-pill {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; display: flex; flex-direction: column; gap: 2px;
+  }
+  .metric-pill label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); }
+  .metric-pill .mpv { font-size: 15px; font-weight: 600; color: var(--text); font-family: 'DM Serif Display', serif; }
+  .metric-pill .mps { font-size: 11px; color: var(--text3); }
+
+  .feature-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
+  .feature-table th { text-align: left; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); padding: 6px 10px; border-bottom: 1px solid var(--border); }
+  .feature-table td { padding: 7px 10px; border-bottom: 1px solid var(--border2); color: var(--text2); vertical-align: top; }
+  .feature-table tr:last-child td { border-bottom: none; }
+  .feature-table td:first-child { font-weight: 500; color: var(--text); white-space: nowrap; }
+
+  .formula-box {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; font-family: monospace; font-size: 12px; color: var(--text);
+    margin: 8px 0; line-height: 1.6; overflow-x: auto; white-space: pre;
+  }
+
+  .variance-box {
+    background: var(--amber-light); border: 1px solid #F0D090; border-radius: 8px;
+    padding: 12px 14px; margin: 10px 0;
+  }
+  .variance-box .vb-title { font-size: 11px; font-weight: 600; color: var(--amber); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+  .variance-box p { font-size: 12px; color: var(--amber); line-height: 1.55; margin-bottom: 4px; }
+  .variance-box p:last-child { margin-bottom: 0; }
+
+  .dataset-box {
+    background: var(--blue-light); border: 1px solid #C0D4F5; border-radius: 8px;
+    padding: 12px 14px; margin: 10px 0;
+  }
+  .dataset-box .db-title { font-size: 11px; font-weight: 600; color: var(--blue); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+  .dataset-box p { font-size: 12px; color: var(--blue); line-height: 1.55; margin-bottom: 4px; }
+  .dataset-box p:last-child { margin-bottom: 0; }
+
+  /* FIX 14: Adjustment breakdown table in modal */
+  .adj-breakdown-box {
+    background: var(--accent-light); border: 1px solid #F0C890; border-radius: 10px;
+    padding: 14px 16px; margin: 10px 0;
+  }
+  .adj-breakdown-box .ab-title { font-size: 11px; font-weight: 600; color: var(--accent-dark); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
+  .adj-breakdown-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 5px 0; border-bottom: 1px solid rgba(200,129,58,.15); }
+  .adj-breakdown-row:last-child { border-bottom: none; font-weight: 600; color: var(--accent-dark); font-size: 13px; }
+  .adj-breakdown-row .abl { color: var(--text2); }
+  .adj-breakdown-row .abv { font-weight: 600; color: var(--accent-dark); font-family: 'DM Serif Display', serif; font-size: 14px; }
+
+  .pipeline-steps { margin: 10px 0; }
+  .pipeline-step {
+    display: flex; gap: 12px; align-items: flex-start; padding: 8px 0;
+    border-bottom: 1px solid var(--border2);
+  }
+  .pipeline-step:last-child { border-bottom: none; }
+  .ps-num {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--text); color: white;
+    font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .ps-content { flex: 1; }
+  .ps-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .ps-body { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  .tree-viz {
+    font-family: monospace; font-size: 11px; line-height: 1.7; color: var(--text2);
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; overflow-x: auto; margin: 8px 0; white-space: pre;
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 280px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .tco-grid { grid-template-columns: 1fr 1fr; }
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .module-status-bar { padding: 8px 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Car<span>IQ</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchPage('buyer',this)">Buyer</button>
+    <button class="nav-tab" onclick="switchPage('seller',this)">Seller</button>
+  </div>
+  <div class="nav-tag">Prototype v0.3</div>
+</nav>
+
+<div class="module-status-bar" id="status-bar">
+  <span>AI Modules:</span>
+  <span class="ms-pill ms-pending" id="ms1">⏳ M1 Price</span>
+  <span class="ms-pill ms-pending" id="ms2">⏳ M2 Maintenance</span>
+  <span class="ms-pill ms-pending" id="ms3">⏳ M3 Depreciation</span>
+  <span class="ms-pill ms-pending" id="ms4">⏳ M4 Condition</span>
+  <span class="ms-pill ms-pending" id="ms5">⏳ M5 Fraud</span>
+  <span class="ms-pill ms-pending" id="ms-adj">⏳ City+Body Adj</span>
+</div>
+
+<!-- ═══ BUYER ═══ -->
+<div id="page-buyer" class="page active">
+  <div class="hero-band">
+    <h1>Find your next car — with full cost transparency</h1>
+    <p>AI-powered price, condition, and fraud analysis at listing discovery time</p>
+  </div>
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-title">Available Listings</div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" type="text" id="buyerSearch" placeholder="Search brand, model…" oninput="loadListings()"/>
+      </div>
+      <div class="filter-row" id="fuelFilter">
+        <button class="filter-chip active" onclick="setFuel('all',this)">All</button>
+        <button class="filter-chip" onclick="setFuel('Petrol',this)">Petrol</button>
+        <button class="filter-chip" onclick="setFuel('Diesel',this)">Diesel</button>
+        <button class="filter-chip" onclick="setFuel('CNG',this)">CNG</button>
+      </div>
+      <div id="listings-container"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="main-panel" id="buyer-main">
+      <div class="empty-state">
+        <div class="empty-icon">🚗</div>
+        <h3>Select a listing to see AI analysis</h3>
+        <p>Click any car from the panel on the left</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SELLER ═══ -->
+<div id="page-seller" class="page">
+  <div class="hero-band hero-band-seller">
+    <h1>List your car — AI analyses it instantly</h1>
+    <p>Upload a photo and get real-time condition scoring + fraud detection</p>
+  </div>
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-title">My Listings</div>
+      <div id="my-listings-container"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="main-panel">
+      <div class="section-label">New Listing</div>
+
+      <div class="opencv-notice" id="opencv-notice" style="display:none">
+        ⚠️ <div><strong>OpenCV not installed</strong> — Modules 4 &amp; 5 (condition + fraud) are disabled.
+        Run <code>pip install opencv-python-headless pillow</code> and restart the server.</div>
+      </div>
+
+      <div class="seller-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Brand</label>
+            <select id="s-brand">
+              <option value="">Select brand</option>
+              <option>Maruti Suzuki</option><option>Hyundai</option><option>Tata</option>
+              <option>Honda</option><option>Toyota</option><option>Mahindra</option>
+              <option>Ford</option><option>BMW</option><option>Audi</option><option>Volkswagen</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Model</label>
+            <input id="s-model" type="text" placeholder="e.g. Swift, i20, Nexon"/>
+          </div>
+          <div class="form-group">
+            <label>Year</label>
+            <input id="s-year" type="number" placeholder="e.g. 2019" min="2000" max="2025"/>
+          </div>
+          <div class="form-group">
+            <label>KM Driven</label>
+            <input id="s-km" type="number" placeholder="e.g. 45000"/>
+          </div>
+          <div class="form-group">
+            <label>Fuel Type</label>
+            <select id="s-fuel">
+              <option value="">Select</option>
+              <option>Petrol</option><option>Diesel</option><option>CNG</option><option>Electric</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <select id="s-city">
+              <option value="">Select city</option>
+              <option>Mumbai</option><option>Delhi</option><option>Bengaluru</option>
+              <option>Hyderabad</option><option>Chennai</option><option>Pune</option>
+              <option>Jaipur</option><option>Kolkata</option><option>Ahmedabad</option>
+              <option>Nagpur</option><option>Indore</option><option>Chandigarh</option>
+            </select>
+          </div>
+          <!-- FIX 9: Body type selector added to seller form -->
+          <div class="form-group">
+            <label>Body Type</label>
+            <select id="s-body-type">
+              <option value="">Select type</option>
+              <option>Hatchback</option>
+              <option>Sedan</option>
+              <option>SUV</option>
+              <option>MUV</option>
+              <option>Luxury Sedan</option>
+              <option>Convertible</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Asking Price (₹)</label>
+            <input id="s-price" type="number" placeholder="e.g. 450000"/>
+          </div>
+          <div class="form-group">
+            <label>Transmission</label>
+            <select id="s-trans">
+              <option value="">Select</option>
+              <option>Manual</option><option>Automatic</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Vehicle Photo <span style="color:var(--text3);font-weight:400">(required for condition scoring)</span></label>
+            <div class="upload-zone" id="upload-zone">
+              <input type="file" id="s-image" accept="image/jpeg,image/png" onchange="handleImageSelect(this)"/>
+              <div class="upload-icon" id="upload-icon">📷</div>
+              <div id="upload-text">Click to upload a photo · JPEG or PNG · max 5 MB</div>
+              <div id="upload-filename" style="margin-top:6px;font-size:12px;display:none"></div>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="submit-btn" onclick="addListing()">+ Add Listing &amp; Analyse</button>
+          <span style="font-size:12px;color:var(--text3)">Modules 4 &amp; 5 run instantly on submit</span>
+        </div>
+      </div>
+
+      <div class="section-label">AI Module Outputs</div>
+      <div id="seller-model-display">
+        <div style="font-size:13px;color:var(--text3)">Add a listing above to see live analysis here.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let activeFuel = 'all';
+let selectedId = null;
+let allListings = [];
+let openCVLive  = false;
+let mlLive      = false;
+let module2Live = false;
+let marketAdjLive = false;
+
+async function loadStatus() {
+  try {
+    const s = await fetch('/api/status').then(r => r.json());
+    openCVLive    = s.opencv_available;
+    mlLive        = s.ml_models_available;
+    module2Live   = s.module2_available || false;
+    marketAdjLive = s.market_adj_available || false;
+
+    const set = (id, live, label) => {
+      const el = document.getElementById(id);
+      el.textContent = live ? `✓ ${label}` : `⏳ ${label}`;
+      el.className = `ms-pill ${live ? 'ms-live' : 'ms-pending'}`;
+    };
+
+    set('ms1',    mlLive,        'M1 Price');
+    set('ms2',    module2Live,   'M2 Maintenance');
+    set('ms3',    mlLive,        'M3 Depreciation');
+    set('ms4',    openCVLive,    'M4 Condition');
+    set('ms5',    openCVLive,    'M5 Fraud');
+    // City+Body adjustment is always active (falls back to hardcoded constants)
+    set('ms-adj', true,          'City+Body Adj');
+
+    if (!openCVLive) document.getElementById('opencv-notice').style.display = 'flex';
+  } catch(e) {}
+}
+
+function switchPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  btn.classList.add('active');
+  if (page === 'seller') loadMyListings();
+}
+
+async function api(path, opts={}) {
+  const res = await fetch(path, opts);
+  return res.json();
+}
+
+function setFuel(fuel, btn) {
+  activeFuel = fuel;
+  document.querySelectorAll('#fuelFilter .filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  loadListings();
+}
+
+async function loadListings() {
+  const q = document.getElementById('buyerSearch').value;
+  allListings = await api(`/api/listings?fuel=${activeFuel}&q=${encodeURIComponent(q)}`);
+  renderSidebar();
+}
+
+function renderSidebar() {
+  const c = document.getElementById('listings-container');
+  if (!allListings.length) {
+    c.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:1rem 0">No listings match.</div>';
+    return;
+  }
+  c.innerHTML = allListings.map(l => cardHTML(l)).join('');
+}
+
+function condBadgeHTML(m) {
+  if (m.condition_label === null || m.condition_label === undefined)
+    return `<span class="badge badge-null">Condition: pending</span>`;
+  const cls = m.condition_label === 'GOOD' ? 'badge-cond-good'
+            : m.condition_label === 'AVERAGE' ? 'badge-cond-avg' : 'badge-cond-poor';
+  const emoji = m.condition_label === 'GOOD' ? '🟢' : m.condition_label === 'AVERAGE' ? '🟡' : '🔴';
+  return `<span class="badge ${cls}">${emoji} ${m.condition_label} · ${m.condition_score}/100</span>`;
+}
+
+function fraudBadgeHTML(m) {
+  if (m.fraud_flag === null || m.fraud_flag === undefined)
+    return `<span class="badge badge-null">Fraud: pending</span>`;
+  return m.fraud_flag
+    ? `<span class="badge badge-fraud-warn">⚠ Flagged · ${m.fraud_confidence}% confidence</span>`
+    : `<span class="badge badge-fraud-ok">✓ Clear</span>`;
+}
+
+// FIX 15: Sidebar card now shows body type + tier badges
+function cardHTML(l) {
+  const m   = l.models;
+  const sel = selectedId === l.id ? 'selected' : '';
+  const tierCls = m.city_tier === 'Tier 1' ? 'badge-tier1'
+                : m.city_tier === 'Tier 2' ? 'badge-tier2'
+                : 'badge-tier3';
+  const tierLabel = m.city_tier || '';
+  const bodyBadge = l.body_type && l.body_type !== 'Other'
+    ? `<span class="badge badge-body">${l.body_type}</span>` : '';
+  const tierBadge = tierLabel
+    ? `<span class="badge ${tierCls}">${tierLabel}</span>` : '';
+
+  return `<div class="listing-card ${sel}" onclick="selectListing(${l.id})">
+    <div class="listing-header">
+      <div>
+        <div class="listing-name">${l.brand} ${l.model}</div>
+        <div class="listing-meta">${l.year} · ${Math.round(l.km/1000)}k km · ${l.city}</div>
+      </div>
+      <div class="listing-price">₹${fmt(l.price)}</div>
+    </div>
+    <div class="listing-badges">
+      <span class="badge badge-fuel">${l.fuel}</span>
+      <span class="badge badge-city">${l.transmission}</span>
+      ${bodyBadge}${tierBadge}
+      ${condBadgeHTML(m)}
+      ${fraudBadgeHTML(m)}
+    </div>
+  </div>`;
+}
+
+async function selectListing(id) {
+  selectedId = id;
+  renderSidebar();
+  const l = await api(`/api/listings/${id}`);
+  renderDetail(l);
+}
+
+function priceLabelHTML(ratio) {
+  if (ratio === null || ratio === undefined) return '';
+  if (ratio < 0.70) return `<span class="price-label-pill price-under">Underpriced</span>`;
+  if (ratio <= 1.15) return `<span class="price-label-pill price-fair">Fair Price</span>`;
+  return `<span class="price-label-pill price-over">Overpriced</span>`;
+}
+
+function renderDetail(l) {
+  const m = l.models;
+
+  const fraudBanner = m.fraud_flag
+    ? `<div class="fraud-alert-banner">
+        <div class="fraud-icon">⚠️</div>
+        <div>
+          <div class="fraud-title">Potential Fraud Alert — ${m.fraud_confidence}% confidence</div>
+          <div class="fraud-body">This listing is simultaneously priced significantly below our estimated fair value
+          and in poor condition. Proceed with caution. Verify ownership documents and inspect in person.</div>
+        </div>
+      </div>` : '';
+
+  // FIX 12: Fair price row uses adjusted_price as the primary number
+  let fairPriceRow = '';
+  const displayPrice = m.adjusted_price || m.price_pred || m.fair_price_rule;
+  if (displayPrice) {
+    const adjPct = m.total_adj_pct > 0 ? `+${m.total_adj_pct}%` : `${m.total_adj_pct}%`;
+    const hasAdj  = m.city_tier || m.body_type;
+    const adjSub  = hasAdj
+      ? `${m.city_tier || '—'} · ${m.body_type || '—'} · Market adj. ${adjPct}`
+      : 'No adjustment applied';
+
+    fairPriceRow = `<div class="fair-price-row" onclick="openExplainModal('fairprice',_currentListing)">
+      <div class="fpr-item">
+        <label>Adjusted Fair Price</label>
+        <div class="fpr-val">₹${fmt(displayPrice)}</div>
+        <div class="fpr-sub">${adjSub}</div>
+      </div>
+      ${m.price_pred ? `<div class="fpr-item">
+        <label>Raw RF Prediction</label>
+        <div class="fpr-val" style="font-size:13px;color:var(--text2)">₹${fmt(m.price_pred)}</div>
+        <div class="fpr-sub">Before city/body adj.</div>
+      </div>` : ''}
+      <div class="fpr-item"><label>Price Ratio</label><div class="fpr-val">${m.price_ratio}×</div></div>
+      <div class="fpr-item"><label>Assessment</label><div>${priceLabelHTML(m.price_ratio)}</div></div>
+    </div>`;
+  }
+
+  document.getElementById('buyer-main').innerHTML = `
+    <div class="detail-header">
+      <div>
+        <div class="detail-title">${l.brand} ${l.model}</div>
+        <div class="detail-subtitle">${l.year} · ${l.km.toLocaleString()} km · ${l.fuel} · ${l.transmission} · ${l.city}</div>
+        <div class="listing-badges" style="margin-top:10px">
+          <span class="badge badge-fuel">${l.fuel}</span>
+          <span class="badge badge-city">${l.city}</span>
+          ${l.body_type && l.body_type !== 'Other' ? `<span class="badge badge-body">${l.body_type}</span>` : ''}
+          ${m.city_tier ? `<span class="badge ${m.city_tier==='Tier 1'?'badge-tier1':m.city_tier==='Tier 2'?'badge-tier2':'badge-tier3'}">${m.city_tier}</span>` : ''}
+          ${condBadgeHTML(m)}
+          ${fraudBadgeHTML(m)}
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="detail-price-main">₹${fmt(l.price)}</div>
+        <div class="detail-price-label">Asking price · by ${l.seller_name}</div>
+      </div>
+    </div>
+    ${fraudBanner}
+    ${fairPriceRow}
+    ${tcoHTML(l)}
+    <div class="section-label">AI Module Outputs</div>
+    <div class="model-grid">
+      ${mcPrice(m)}${mcMaint(m)}${mcDepr(m)}${mcCond(m)}${mcFraud(m)}
+    </div>
+    <div class="section-label" style="margin-top:.5rem">Listing Info</div>
+    <div class="stat-row">
+      <div class="stat-box"><label>Year</label><div class="val">${l.year}</div></div>
+      <div class="stat-box"><label>KM Driven</label><div class="val">${l.km.toLocaleString()}</div></div>
+      <div class="stat-box"><label>Transmission</label><div class="val">${l.transmission}</div></div>
+    </div>`;
+}
+
+async function loadMyListings() {
+  const all  = await api('/api/listings?fuel=all&q=');
+  const mine = all.filter(l => l.owner === 'seller');
+  const c    = document.getElementById('my-listings-container');
+  if (!mine.length) {
+    c.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:1rem 0">No listings yet.</div>';
+    return;
+  }
+  c.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">` +
+    mine.map(l => `<div class="my-listing-row">
+      <div>
+        <div class="my-listing-name">${l.brand} ${l.model} ${l.year}</div>
+        <div class="my-listing-meta">Live · ₹${fmt(l.price)} · ${l.city}${l.body_type && l.body_type!=='Other' ? ' · '+l.body_type : ''}</div>
+      </div>
+      <button class="btn-danger" onclick="deleteListing(${l.id})">Remove</button>
+    </div>`).join('') + `</div>`;
+}
+
+function handleImageSelect(input) {
+  const file = input.files[0];
+  const zone = document.getElementById('upload-zone');
+  const icon = document.getElementById('upload-icon');
+  const text = document.getElementById('upload-text');
+  const fname = document.getElementById('upload-filename');
+  if (file) {
+    if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5 MB'); input.value = ''; return; }
+    zone.classList.add('has-file'); icon.textContent = '✅';
+    text.textContent = 'Photo selected — will be analysed on submit';
+    fname.style.display = 'block';
+    fname.textContent = `${file.name} (${(file.size/1024).toFixed(0)} KB)`;
+  } else {
+    zone.classList.remove('has-file'); icon.textContent = '📷';
+    text.textContent = 'Click to upload a photo · JPEG or PNG · max 5 MB';
+    fname.style.display = 'none';
+  }
+}
+
+// FIX 9: body_type now read from form and sent in POST
+async function addListing() {
+  const btn = document.getElementById('submit-btn');
+  const fields = {
+    brand:        document.getElementById('s-brand').value,
+    model:        document.getElementById('s-model').value,
+    year:         document.getElementById('s-year').value,
+    km:           document.getElementById('s-km').value,
+    fuel:         document.getElementById('s-fuel').value,
+    city:         document.getElementById('s-city').value,
+    price:        document.getElementById('s-price').value,
+    transmission: document.getElementById('s-trans').value,
+    body_type:    document.getElementById('s-body-type').value || 'Other',
+  };
+  // body_type not required — default to Other silently
+  const requiredFields = ['brand','model','year','km','fuel','city','price','transmission'];
+  if (requiredFields.some(k => !fields[k])) { showToast('Please fill in all fields.'); return; }
+
+  const imageFile = document.getElementById('s-image').files[0];
+  btn.disabled = true; btn.textContent = 'Analysing…';
+
+  try {
+    let listing;
+    if (imageFile && openCVLive) {
+      const fd = new FormData();
+      Object.entries(fields).forEach(([k,v]) => fd.append(k, v));
+      fd.append('seller_name', 'You'); fd.append('owner', 'seller'); fd.append('image', imageFile);
+      listing = await (await fetch('/api/listings', { method:'POST', body:fd })).json();
+    } else {
+      listing = await (await fetch('/api/listings', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({...fields, seller_name:'You', owner:'seller'})
+      })).json();
+    }
+    if (listing.error) { showToast('Error: ' + listing.error); return; }
+    loadMyListings(); loadListings(); renderSellerOutput(listing);
+    const condMsg = listing.models.condition_label ? ` · Condition: ${listing.models.condition_label}` : ' · Upload photo for condition scoring';
+    const adjMsg  = listing.models.total_adj_pct ? ` · Market adj. +${listing.models.total_adj_pct}%` : '';
+    showToast(`✓ ${listing.brand} ${listing.model} listed!${condMsg}${adjMsg}`);
+    document.getElementById('s-image').value = '';
+    handleImageSelect(document.getElementById('s-image'));
+  } finally {
+    btn.disabled = false; btn.textContent = '+ Add Listing & Analyse';
+  }
+}
+
+async function deleteListing(id) {
+  await api(`/api/listings/${id}`, { method:'DELETE' });
+  loadMyListings(); loadListings();
+  showToast('Listing removed.');
+}
+
+function renderSellerOutput(l) {
+  const m = l.models;
+  const displayPrice = m.adjusted_price || m.price_pred || m.fair_price_rule || 0;
+  document.getElementById('seller-model-display').innerHTML = `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+      <div style="font-size:20px">🚗</div>
+      <div>
+        <div style="font-weight:600;font-size:15px">${l.brand} ${l.model} ${l.year}</div>
+        <div style="font-size:12px;color:var(--text3)">#${l.id} · ${l.fuel} · ${l.km.toLocaleString()} km · ${l.city} · ${l.body_type || 'Other'}</div>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div style="font-size:16px;font-weight:600;color:var(--accent-dark)">₹${fmt(l.price)}</div>
+        <div style="font-size:11px;color:var(--text3)">asking · adj. fair est. ₹${fmt(displayPrice)}</div>
+      </div>
+    </div>
+    ${m.fraud_flag ? `<div class="fraud-alert-banner" style="margin-bottom:14px">
+      <div class="fraud-icon">⚠️</div>
+      <div><div class="fraud-title">Fraud Alert on your listing</div>
+      <div class="fraud-body">Price is more than 40% below estimated fair value and condition is poor.</div></div>
+    </div>` : ''}
+    <div class="model-grid">${mcPrice(m)}${mcMaint(m)}${mcDepr(m)}${mcCond(m)}${mcFraud(m)}</div>`;
+}
+
+// ── MODEL CARDS ───────────────────────────────────────────────────────────────
+function nullCard(icon, title, subtitle) {
+  return `<div class="model-card model-null">
+    <div class="pending-pill">Pending</div>
+    <div class="model-card-header">
+      <div class="model-icon" style="background:#F4F2EE">${icon}</div>
+      <div class="model-card-title">${title}<br/><span style="font-weight:400;font-size:11px">${subtitle}</span></div>
+    </div>
+    <div class="null-value">—</div>
+    <span class="null-sublabel">Model not trained yet</span>
+  </div>`;
+}
+
+// FIX 11: mcPrice shows adjusted_price as primary, raw RF as secondary,
+//          plus the city and body adjustment amounts.
+function mcPrice(m) {
+  const displayPrice = m.adjusted_price || m.price_pred;
+  if (!displayPrice) return nullCard('💰','Price Prediction','Random Forest · R²=0.912 target');
+
+  const hasAdj = m.city_adj_amt || m.body_adj_amt;
+  const adjStrip = hasAdj ? `
+    <div class="adj-strip">
+      <div class="adj-row">
+        <span class="adj-label"><span class="adj-tag">${m.city_tier || 'Tier 3'}</span> City</span>
+        <span class="adj-val positive">₹${fmt(Math.abs(m.city_adj_amt))}</span>
+      </div>
+      <div class="adj-row">
+        <span class="adj-label"><span class="adj-tag">${m.body_type || 'Other'}</span> Body</span>
+        <span class="adj-val positive">₹${fmt(Math.abs(m.body_adj_amt))}</span>
+      </div>
+    </div>` : '';
+
+  return `<div class="model-card">
+    <div class="live-pill">Live</div>
+    <div class="model-card-header">
+      <div class="model-icon" style="background:var(--accent-light)">💰</div>
+      <div class="model-card-title">Predicted Fair Price<br/><span style="font-weight:400;font-size:11px">Random Forest + Market Adj.</span></div>
+    </div>
+    <div class="model-value">₹${fmt(displayPrice)}</div>
+    <div class="model-sublabel">
+      ${m.price_pred ? `RF base ₹${fmt(m.price_pred)} · ` : ''}
+      MAE ±₹52,340
+    </div>
+    ${adjStrip}
+  </div>`;
+}
+
+function mcMaint(m) {
+  if (m.maintenance_2yr === null || m.maintenance_2yr === undefined)
+    return nullCard('🔧','2-Year Maintenance','Hist Gradient Boosting · R²=0.977 target');
+  return `<div class="model-card">
+    <div class="live-pill">Live</div>
+    <div class="model-card-header">
+      <div class="model-icon" style="background:var(--blue-light)">🔧</div>
+      <div class="model-card-title">2-Year Maintenance Cost<br/><span style="font-weight:400;font-size:11px">Hist Gradient Boosting · R²=0.977</span></div>
+    </div>
+    <div class="model-value">₹${fmt(m.maintenance_2yr)}</div>
+    <div class="model-sublabel">MAE ±₹7,016 · forecast over 24 months</div>
+  </div>`;
+}
+
+function mcDepr(m) {
+  if (m.future_value_2yr === null || m.future_value_2yr === undefined)
+    return nullCard('📉','Depreciation Forecast','Random Forest · R²=0.891 target');
+  return `<div class="model-card">
+    <div class="live-pill">Live</div>
+    <div class="model-card-header">
+      <div class="model-icon" style="background:var(--green-light)">📉</div>
+      <div class="model-card-title">2-Year Depreciation<br/><span style="font-weight:400;font-size:11px">Random Forest · R²=0.891</span></div>
+    </div>
+    <div class="model-value">₹${fmt(m.future_value_2yr)}</div>
+    <div class="model-sublabel">Resale value in 24 months</div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:var(--text3)">You lose</span>
+      <span style="font-size:13px;font-weight:600;color:var(--red)">−₹${fmt(m.depreciation_2yr)} (${m.depreciation_pct}%)</span>
+    </div>
+  </div>`;
+}
+
+function mcCond(m) {
+  if (m.condition_score === null || m.condition_score === undefined) {
+    return `<div class="model-card model-null">
+      <div class="pending-pill">${!openCVLive ? 'No OpenCV' : 'No Image'}</div>
+      <div class="model-card-header">
+        <div class="model-icon" style="background:#F4F2EE">🖼️</div>
+        <div class="model-card-title">Condition Assessment<br/><span style="font-weight:400;font-size:11px">OpenCV Pipeline · 83.6% accuracy</span></div>
+      </div>
+      <div class="null-value">—</div>
+      <span class="null-sublabel">${openCVLive ? 'Upload a photo to score' : 'Install opencv-python-headless'}</span>
+    </div>`;
+  }
+  const color = m.condition_label==='GOOD' ? 'var(--green)' : m.condition_label==='AVERAGE' ? 'var(--amber)' : 'var(--red)';
+  const emoji = m.condition_label==='GOOD' ? '🟢' : m.condition_label==='AVERAGE' ? '🟡' : '🔴';
+  return `<div class="model-card">
+    <div class="live-pill">Live ✓</div>
+    <div class="model-card-header">
+      <div class="model-icon" style="background:var(--green-light)">🖼️</div>
+      <div class="model-card-title">Condition Assessment<br/><span style="font-weight:400;font-size:11px">OpenCV Pipeline · 83.6% accuracy</span></div>
+    </div>
+    <div class="model-value" style="color:${color}">${emoji} ${m.condition_label}</div>
+    <div class="cond-bar-wrap">
+      <div class="cond-bar"><div class="cond-fill" style="width:${m.condition_score}%;background:${color}"></div></div>
+    </div>
+    <div class="model-sublabel">Score: ${m.condition_score}/100</div>
+  </div>`;
+}
+
+function mcFraud(m) {
+  if (m.fraud_flag === null || m.fraud_flag === undefined) {
+    return `<div class="model-card model-null">
+      <div class="pending-pill">${openCVLive ? 'No Image' : 'No OpenCV'}</div>
+      <div class="model-card-header">
+        <div class="model-icon" style="background:#F4F2EE">🛡️</div>
+        <div class="model-card-title">Fraud Detection<br/><span style="font-weight:400;font-size:11px">Dual-threshold · 89.4% TPR</span></div>
+      </div>
+      <div class="null-value">—</div>
+      <span class="null-sublabel">${openCVLive ? 'Needs condition score' : 'Install opencv-python-headless'}</span>
+    </div>`;
+  }
+  const col = m.fraud_flag ? 'var(--red)' : 'var(--green)';
+  const bg  = m.fraud_flag ? 'var(--red-light)' : 'var(--green-light)';
+  return `<div class="model-card">
+    <div class="live-pill">Live ✓</div>
+    <div class="model-card-header">
+      <div class="model-icon" style="background:${bg}">🛡️</div>
+      <div class="model-card-title">Fraud Detection<br/><span style="font-weight:400;font-size:11px">Dual-threshold · 89.4% TPR</span></div>
+    </div>
+    <div class="model-value" style="color:${col}">${m.fraud_flag ? '⚠ Flagged' : '✓ Clear'}</div>
+    <div class="model-sublabel">Confidence: ${m.fraud_confidence}% · ratio ${m.price_ratio}×</div>
+  </div>`;
+}
+
+// FIX 13: tcoHTML uses adjusted_price in the Fair Price (ML) cell
+function tcoHTML(l) {
+  const m = l.models;
+  const fairPriceForTCO = m.adjusted_price || m.price_pred || m.fair_price_rule;
+  const hasAll = fairPriceForTCO !== null && m.maintenance_2yr !== null && m.future_value_2yr !== null
+    && fairPriceForTCO !== undefined && m.maintenance_2yr !== undefined && m.future_value_2yr !== undefined;
+  const netCost = hasAll ? l.price + m.maintenance_2yr - m.future_value_2yr : null;
+
+  return `<div class="tco-card">
+    <div class="tco-title">Total Cost of Ownership Card — 2-Year Projection</div>
+    <div class="tco-grid">
+      <div class="tco-item ${!fairPriceForTCO?'null':''}">
+        <label>Fair Price (Adjusted)</label>
+        <div class="tco-val">${fairPriceForTCO ? '₹'+fmt(fairPriceForTCO) : '—'}</div>
+      </div>
+      <div class="tco-item ${m.maintenance_2yr==null?'null':''}">
+        <label>Maintenance (2yr)</label>
+        <div class="tco-val">${m.maintenance_2yr!=null ? '₹'+fmt(m.maintenance_2yr) : '—'}</div>
+      </div>
+      <div class="tco-item ${m.future_value_2yr==null?'null':''}">
+        <label>Resale Value (2yr)</label>
+        <div class="tco-val">${m.future_value_2yr!=null ? '₹'+fmt(m.future_value_2yr) : '—'}</div>
+      </div>
+    </div>
+    <hr class="tco-divider"/>
+    <div class="tco-total">
+      <label>Net 2-Year Cost = Purchase + Maintenance − Resale</label>
+      <div class="tco-val">${netCost !== null ? '₹'+fmt(netCost) : 'Modules 1–3 not yet trained'}</div>
+    </div>
+  </div>`;
+}
+
+function fmt(n) {
+  if (!n && n !== 0) return '—';
+  if (n >= 100000) return (n/100000).toFixed(2)+'L';
+  if (n >= 1000)   return (n/1000).toFixed(0)+'K';
+  return n.toString();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+loadStatus();
+loadListings();
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  EXPLANATION MODAL SYSTEM
+// ══════════════════════════════════════════════════════════════════════════════
+
+function openExplainModal(key, l) {
+  const m = (l && l.models) ? l.models : {};
+  const content = buildModalContent(key, l, m);
+  document.getElementById('explain-modal-body').innerHTML = content;
+  document.getElementById('explain-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeExplainModal() {
+  document.getElementById('explain-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function buildModalContent(key, l, m) {
+  switch(key) {
+    case 'price':        return modalPrice(l, m);
+    case 'maintenance':  return modalMaintenance(l, m);
+    case 'depreciation': return modalDepreciation(l, m);
+    case 'condition':    return modalCondition(l, m);
+    case 'fraud':        return modalFraud(l, m);
+    case 'tco':          return modalTCO(l, m);
+    case 'fairprice':    return modalFairPriceRow(l, m);
+    default: return '<p>No detail available.</p>';
+  }
+}
+
+function fmtFull(n) {
+  if (!n && n !== 0) return '—';
+  return '₹' + Number(n).toLocaleString('en-IN');
+}
+function fmtL(n) { return fmt(n) ? '₹'+fmt(n) : '—'; }
+function sectionHead(title) {
+  return `<div class="explain-section-title">${title}</div>`;
+}
+
+// FIX 14: modalPrice now has full market adjustment section
+function modalPrice(l, m) {
+  const rawPrice = m.price_pred;
+  const adjPrice = m.adjusted_price || rawPrice;
+  const age   = l ? (2026 - parseInt(l.year)) : '?';
+  const km    = l ? l.km.toLocaleString() : '?';
+  const brand = l ? l.brand.split(' ')[0] : '?';
+  const fuel  = l ? l.fuel : '?';
+  const trans = l ? l.transmission : '?';
+  const city  = l ? l.city : '?';
+  const bodyT = m.body_type || l?.body_type || 'Other';
+  const tier  = m.city_tier || 'Tier 3';
+
+  const cityMult = m.city_multiplier ? `×${m.city_multiplier}` : '×1.00';
+  const bodyMult = m.body_multiplier ? `×${m.body_multiplier}` : '×1.00';
+
+  return `
+  <div class="modal-header">
+    <div class="modal-header-left">
+      <div class="modal-header-icon">💰</div>
+      <div>
+        <div class="modal-header-title">Predicted Fair Price — How We Got Here</div>
+        <div class="modal-header-sub">Module 1 · Random Forest + Market Adjustment · Trained on v3.csv</div>
+      </div>
+    </div>
+    <div class="modal-close" onclick="closeExplainModal()">✕</div>
+  </div>
+  <div class="modal-body">
+    <div class="modal-result-hero">
+      <div class="mrh-item"><label>Adjusted Fair Price</label><div class="mrh-val">${fmtL(adjPrice)}</div><div class="mrh-sub">After city + body type adjustment</div></div>
+      <div class="mrh-item"><label>Raw RF Prediction</label><div class="mrh-val" style="font-size:20px">${fmtL(rawPrice)}</div><div class="mrh-sub">Before adjustments</div></div>
+      <div class="mrh-item"><label>Accuracy (R²)</label><div class="mrh-val">0.912</div><div class="mrh-sub">91.2% variance explained</div></div>
+    </div>
+
+    <div class="explain-section">
+      ${sectionHead('Step 1 — Random Forest Base Prediction')}
+      <p>The RF model was trained on 8,000+ transactions from v3.csv using 12 features (age, km, brand, fuel, transmission, engine, power, etc.). It outputs a raw ₹ estimate that is agnostic to city and body type since those weren't in the dataset.</p>
+      <div class="metric-pills">
+        <div class="metric-pill"><label>R²</label><div class="mpv">0.912</div><div class="mps">variance explained</div></div>
+        <div class="metric-pill"><label>MAE</label><div class="mpv">±₹52,340</div><div class="mps">avg error</div></div>
+      </div>
+    </div>
+
+    <div class="explain-section">
+      ${sectionHead('Step 2 — Market Adjustment (Post-Prediction)')}
+      <p>Because the dataset has no city or body type columns, these are applied as calibrated multipliers <strong>after</strong> the RF output. This avoids contaminating model training with guessed features.</p>
+      <div class="adj-breakdown-box">
+        <div class="ab-title">Adjustment Breakdown for This Car</div>
+        <div class="adj-breakdown-row">
+          <span class="abl">RF Base Price</span>
+          <span class="abv">${fmtL(rawPrice)}</span>
+        </div>
+        <div class="adj-breakdown-row">
+          <span class="abl">City: ${city} → ${tier} (${cityMult})</span>
+          <span class="abv">+${fmtL(m.city_adj_amt)}</span>
+        </div>
+        <div class="adj-breakdown-row">
+          <span class="abl">Body Type: ${bodyT} (${bodyMult})</span>
+          <span class="abv">+${fmtL(m.body_adj_amt)}</span>
+        </div>
+        <div class="adj-breakdown-row">
+          <span class="abl">Adjusted Fair Price</span>
+          <span class="abv">${fmtL(adjPrice)}</span>
+        </div>
+      </div>
+      <table class="feature-table" style="margin-top:12px">
+        <tr><th>Tier</th><th>Cities</th><th>Multiplier</th><th>Rationale</th></tr>
+        <tr><td>Tier 1</td><td>Mumbai, Delhi, Bengaluru, Chennai, Hyderabad, Kolkata</td><td>×1.10</td><td>High demand, strong resale infra</td></tr>
+        <tr><td>Tier 2</td><td>Pune, Ahmedabad, Jaipur, Nagpur…</td><td>×1.04</td><td>Mid-tier demand premium</td></tr>
+        <tr><td>Tier 3</td><td>All other cities</td><td>×1.00</td><td>Baseline</td></tr>
+      </table>
+      <table class="feature-table" style="margin-top:8px">
+        <tr><th>Body Type</th><th>Multiplier</th><th>Rationale</th></tr>
+        <tr><td>SUV</td><td>×1.12</td><td>Highest demand & resale in India</td></tr>
+        <tr><td>Luxury Sedan</td><td>×1.08</td><td>Camry/Accord niche premium</td></tr>
+        <tr><td>MUV</td><td>×1.06</td><td>Innova-class fleet premium</td></tr>
+        <tr><td>Sedan</td><td>×1.03</td><td>City, Verna, Dzire</td></tr>
+        <tr><td>Hatchback</td><td>×1.00</td><td>Baseline</td></tr>
+      </table>
+    </div>
+
+    <div class="explain-section">
+      ${sectionHead('The 12 RF Input Features')}
+      <table class="feature-table">
+        <tr><th>Feature</th><th>This Car</th><th>Why It Matters</th></tr>
+        <tr><td>vehicle_age</td><td>${age} years</td><td>Biggest depreciation driver.</td></tr>
+        <tr><td>km_driven</td><td>${km} km</td><td>Higher mileage = more wear.</td></tr>
+        <tr><td>brand</td><td>${brand}</td><td>Prestige, resale demand.</td></tr>
+        <tr><td>fuel</td><td>${fuel}</td><td>Diesel/EV premium effect.</td></tr>
+        <tr><td>transmission</td><td>${trans}</td><td>Auto commands 5–15% premium.</td></tr>
+        <tr><td>owner_num</td><td>1–4</td><td>Each owner reduces value ~10%.</td></tr>
+        <tr><td>engine_cc / power_bhp</td><td>default</td><td>Performance tier.</td></tr>
+        <tr><td>mileage_band</td><td>computed</td><td>Relative wear vs age.</td></tr>
+      </table>
+    </div>
+
+    <div class="variance-box">
+      <div class="vb-title">⚠ Uncertainty</div>
+      <p><strong>Expected range:</strong> ${fmtL(adjPrice ? adjPrice - 75000 : null)} – ${fmtL(adjPrice ? adjPrice + 75000 : null)} with ~68% confidence.</p>
+      <p><strong>Not captured:</strong> Service history, accident history, cosmetic condition. These can move prices ±15–20% independently.</p>
+    </div>
+  </div>`;
+}
+
+function modalMaintenance(l, m) {
+  const val = m.maintenance_2yr;
+  const isLive = val !== null && val !== undefined;
+
+  return `
+  <div class="modal-header">
+    <div class="modal-header-left">
+      <div class="modal-header-icon">🔧</div>
+      <div>
+        <div class="modal-header-title">2-Year Maintenance Forecast — How We Got Here</div>
+        <div class="modal-header-sub">Module 2 · Hist Gradient Boosting · R²=0.977</div>
+      </div>
+    </div>
+    <div class="modal-close" onclick="closeExplainModal()">✕</div>
+  </div>
+  <div class="modal-body">
+    <div class="modal-result-hero">
+      <div class="mrh-item"><label>Model Output</label><div class="mrh-val">${isLive ? fmtL(val) : '—'}</div><div class="mrh-sub">${isLive ? '2-year maintenance forecast' : 'Model not yet trained'}</div></div>
+      <div class="mrh-item"><label>Accuracy (R²)</label><div class="mrh-val">0.977</div><div class="mrh-sub">97.7% variance explained</div></div>
+      <div class="mrh-item"><label>Mean Abs. Error</label><div class="mrh-val">±₹7,016</div><div class="mrh-sub">Typical prediction error</div></div>
+    </div>
+    <div class="explain-section">
+      ${sectionHead('What This Module Predicts')}
+      <p>Module 2 estimates <strong>total 2-year maintenance cost</strong> in ₹ — scheduled servicing, wear-and-tear parts, and expected minor repairs based on brand, age, mileage, and fuel type. Does not cover accident repairs, major overhauls, or tyres.</p>
+    </div>
+    <div class="explain-section">
+      ${sectionHead('The 11 Input Features')}
+      <table class="feature-table">
+        <tr><th>Feature</th><th>Importance</th><th>Why It Matters</th></tr>
+        <tr><td>brand_class</td><td>Very High</td><td>BMW service is 5–8× Maruti. Biggest cost driver.</td></tr>
+        <tr><td>vehicle_age</td><td>Very High</td><td>Post-warranty costs escalate non-linearly.</td></tr>
+        <tr><td>engine_cc</td><td>Very High</td><td>Larger engines = more oil, costlier parts.</td></tr>
+        <tr><td>fuel_enc</td><td>Very High</td><td>Diesel +25%. CNG +10%.</td></tr>
+        <tr><td>km_driven</td><td>High</td><td>Higher mileage = sooner service intervals.</td></tr>
+        <tr><td>max_power_bhp</td><td>High</td><td>Performance engines cost more.</td></tr>
+        <tr><td>seats</td><td>High</td><td>7-seater vs 5-seater segment cost difference.</td></tr>
+        <tr><td>mileage_kmpl</td><td>Medium</td><td>Engine health signal.</td></tr>
+        <tr><td>owner_enc</td><td>Medium</td><td>More owners = unknown maintenance history.</td></tr>
+        <tr><td>mileage_band</td><td>Medium</td><td>Wear bucket.</td></tr>
+        <tr><td>trans_enc</td><td>Low</td><td>Auto gearbox fluid changes add ₹8–15k.</td></tr>
+      </table>
+    </div>
+    <div class="variance-box">
+      <div class="vb-title">⚠ Limitations</div>
+      <p>City tier labour multiplier applied at inference time (Metro +22%, Tier-3 −12%). Not included: tyres, accident repairs, insurance premium.</p>
+    </div>
+  </div>`;
+}
+
+function modalDepreciation(l, m) {
+  const fv = m.future_value_2yr;
+  const da = m.depreciation_2yr;
+  const dp = m.depreciation_pct;
+  const age = l ? (2026 - parseInt(l.year)) : '?';
+  const brand = l ? l.brand.split(' ')[0] : '?';
+  const fuel  = l ? l.fuel : '?';
+
+  return `
+  <div class="modal-header">
+    <div class="modal-header-left">
+      <div class="modal-header-icon">📉</div>
+      <div>
+        <div class="modal-header-title">2-Year Depreciation Forecast — How We Got Here</div>
+        <div class="modal-header-sub">Module 3 · Real-Wear Simulation + RF + Market Adj · R²=0.891</div>
+      </div>
+    </div>
+    <div class="modal-close" onclick="closeExplainModal()">✕</div>
+  </div>
+  <div class="modal-body">
+    <div class="modal-result-hero">
+      <div class="mrh-item"><label>Resale in 2 Years</label><div class="mrh-val">${fmtL(fv)}</div><div class="mrh-sub">Adjusted for city + body type</div></div>
+      <div class="mrh-item"><label>You Lose</label><div class="mrh-val" style="color:var(--red)">−${fmtL(da)}</div><div class="mrh-sub">${dp}% of adjusted fair price</div></div>
+      <div class="mrh-item"><label>Model R²</label><div class="mrh-val">0.891</div><div class="mrh-sub">89.1% variance explained</div></div>
+    </div>
+    <div class="explain-section">
+      ${sectionHead('How the Future State Is Built')}
+      <div class="pipeline-steps">
+        <div class="pipeline-step"><div class="ps-num">1</div><div class="ps-content"><div class="ps-title">Look Up Brand+Fuel Annual KM Rate</div><div class="ps-body">For ${brand} + ${fuel}: look up median annual km from brand_annual_km.pkl. Unknown combos use global median ~15,200 km/yr.</div></div></div>
+        <div class="pipeline-step"><div class="ps-num">2</div><div class="ps-content"><div class="ps-title">Project Future State</div><div class="ps-body">future_age = ${age} + 2 = <strong>${parseInt(age)+2} years</strong> · future_km = current + (rate × 2) · future_owner = current + 1</div></div></div>
+        <div class="pipeline-step"><div class="ps-num">3</div><div class="ps-content"><div class="ps-title">Run Depreciation RF + Apply Market Adj</div><div class="ps-body">Same city + body multipliers applied to the future value so current and future prices are on the same adjusted scale.</div></div></div>
+        <div class="pipeline-step"><div class="ps-num">4</div><div class="ps-content"><div class="ps-title">Compute Depreciation vs Adjusted Price</div><div class="ps-body"><div class="formula-box">depr_₹ = max(0, adjusted_fair_price − adjusted_future_value)
+depr_% = capped at 80%</div></div></div></div>
+      </div>
+    </div>
+    <div class="variance-box">
+      <div class="vb-title">⚠ Uncertainty</div>
+      <p>Model MAE ~±₹38,000. Could be worse: market flooding, fuel bans, mechanical issues. Could be better: model discontinuation scarcity, inflation driving buyers to used market.</p>
+    </div>
+  </div>`;
+}
+
+function modalCondition(l, m) {
+  const score = m.condition_score;
+  const label = m.condition_label;
+  return `
+  <div class="modal-header">
+    <div class="modal-header-left">
+      <div class="modal-header-icon">🖼️</div>
+      <div>
+        <div class="modal-header-title">Condition Assessment — How We Read the Image</div>
+        <div class="modal-header-sub">Module 4 · OpenCV Edge Detection Pipeline · 83.6% accuracy</div>
+      </div>
+    </div>
+    <div class="modal-close" onclick="closeExplainModal()">✕</div>
+  </div>
+  <div class="modal-body">
+    <div class="modal-result-hero">
+      <div class="mrh-item"><label>Condition</label><div class="mrh-val" style="color:${label==='GOOD'?'var(--green)':label==='AVERAGE'?'var(--amber)':'var(--red)'}">${label || '—'}</div><div class="mrh-sub">${label==='GOOD'?'Clean':label==='AVERAGE'?'Moderate irregularities':label==='POOR'?'High damage signal':'No image'}</div></div>
+      <div class="mrh-item"><label>Score</label><div class="mrh-val">${score!=null?score+'/100':'—'}</div><div class="mrh-sub">Higher = better</div></div>
+      <div class="mrh-item"><label>Accuracy</label><div class="mrh-val">83.6%</div><div class="mrh-sub">On test image set</div></div>
+    </div>
+    <div class="explain-section">
+      ${sectionHead('The 5-Stage OpenCV Pipeline')}
+      <div class="pipeline-steps">
+        <div class="pipeline-step"><div class="ps-num">1</div><div class="ps-content"><div class="ps-title">Decode &amp; Resize to 640×480</div><div class="ps-body">Standardised for consistent edge density comparison.</div></div></div>
+        <div class="pipeline-step"><div class="ps-num">2</div><div class="ps-content"><div class="ps-title">Grayscale + Gaussian Blur (5×5, σ=1.5)</div><div class="ps-body">Removes colour noise; blur smooths JPEG artifacts.</div></div></div>
+        <div class="pipeline-step"><div class="ps-num">3</div><div class="ps-content"><div class="ps-title">Canny Edge Detection (low=50, high=150)</div><div class="ps-body">Dents and scratches produce irregular edges — that's the damage signal.</div></div></div>
+        <div class="pipeline-step"><div class="ps-num">4</div><div class="ps-content"><div class="ps-title">Edge Density → Score → Label</div><div class="ps-body"><div class="formula-box">density = edge_pixels / 307,200
+score   = max(0, 100 − density × 500)
+GOOD    → density < 0.05
+AVERAGE → density 0.05–0.12
+POOR    → density > 0.12</div>${score!=null?`<p>This car: score = <strong>${score}</strong> → <strong>${label}</strong></p>`:''}</div></div></div>
+      </div>
+    </div>
+    <div class="variance-box">
+      <div class="vb-title">⚠ Limitations</div>
+      <p>Only photographed side assessed. Harsh shadows inflate edge density. Interior condition invisible.</p>
+    </div>
+  </div>`;
+}
+
+function modalFraud(l, m) {
+  const flag = m.fraud_flag; const conf = m.fraud_confidence;
+  const ratio = m.price_ratio;
+  const fp = m.adjusted_price || m.price_pred || m.fair_price_rule;
+  const lp = l ? l.price : null;
+  const cs = m.condition_score;
+  return `
+  <div class="modal-header">
+    <div class="modal-header-left">
+      <div class="modal-header-icon">🛡️</div>
+      <div>
+        <div class="modal-header-title">Fraud Detection — How the Flag Was Decided</div>
+        <div class="modal-header-sub">Module 5 · Dual-Threshold · 89.4% TPR · Uses adjusted fair price</div>
+      </div>
+    </div>
+    <div class="modal-close" onclick="closeExplainModal()">✕</div>
+  </div>
+  <div class="modal-body">
+    <div class="modal-result-hero">
+      <div class="mrh-item"><label>Verdict</label><div class="mrh-val" style="color:${flag?'var(--red)':'var(--green)'}">${flag?'⚠ Flagged':'✓ Clear'}</div><div class="mrh-sub">${flag?'Both thresholds breached':'Passed at least one threshold'}</div></div>
+      <div class="mrh-item"><label>Confidence</label><div class="mrh-val">${conf!=null?conf+'%':'—'}</div></div>
+      <div class="mrh-item"><label>Price Ratio</label><div class="mrh-val">${ratio||'—'}×</div><div class="mrh-sub">Listed ÷ Adjusted Fair Price</div></div>
+    </div>
+    <div class="explain-section">
+      ${sectionHead('The Dual-Threshold Logic')}
+      <div class="formula-box">FRAUD = (price_ratio < 0.60) AND (condition_score < 40)
+
+price_ratio = listed_price / adjusted_fair_price
+            = ${fmtFull(lp)} / ${fmtFull(fp)} = ${ratio||'?'}× → ${ratio&&ratio<0.60?'⚠ BREACHED':'✓ OK'}
+condition   = ${cs!=null?cs:'—'} → ${cs!=null?(cs<40?'⚠ BREACHED':'✓ OK'):'Not assessed'}
+
+Result: ${flag?'⚠ BOTH breached → FLAGGED':'✓ Not both breached → CLEAR'}</div>
+      <p>Using the <strong>adjusted fair price</strong> (not raw RF) means a Toyota MUV in Chennai won't be falsely flagged just because the raw model underestimated it.</p>
+    </div>
+    <div class="variance-box">
+      <div class="vb-title">⚠ What This Cannot Detect</div>
+      <p>Odometer tampering, stolen vehicle fraud, or overpriced accident cars will not be caught by price+condition alone.</p>
+    </div>
+  </div>`;
+}
+
+function modalTCO(l, m) {
+  const fp = m.adjusted_price || m.price_pred || m.fair_price_rule;
+  const maint = m.maintenance_2yr;
+  const resale = m.future_value_2yr;
+  const netCost = (l && maint!=null && resale!=null && maint!=undefined && resale!=undefined)
+    ? l.price + maint - resale : null;
+  return `
+  <div class="modal-header">
+    <div class="modal-header-left">
+      <div class="modal-header-icon">📊</div>
+      <div>
+        <div class="modal-header-title">Total Cost of Ownership — 2-Year Projection</div>
+        <div class="modal-header-sub">Combines Modules 1 (adjusted), 2 &amp; 3</div>
+      </div>
+    </div>
+    <div class="modal-close" onclick="closeExplainModal()">✕</div>
+  </div>
+  <div class="modal-body">
+    <div class="modal-result-hero">
+      <div class="mrh-item"><label>Net 2-Year Cost</label><div class="mrh-val">${netCost!==null?fmtL(netCost):'—'}</div><div class="mrh-sub">${netCost!==null?'Total cost of owning for 2 years':'All 3 modules needed'}</div></div>
+    </div>
+    <div class="explain-section">
+      ${sectionHead('The TCO Formula')}
+      <div class="formula-box">Net 2-Year Cost = Purchase Price + 2yr Maintenance − 2yr Resale
+
+= ${fmtFull(l?l.price:null)}  (asking price)
++ ${fmtFull(maint)}           (Module 2 maintenance)
+− ${fmtFull(resale)}          (Module 3 resale — adjusted)
+──────────────────────────────────────
+= ${netCost!==null?fmtFull(netCost):'Pending'}</div>
+      <p>Fair Price (Adjusted) shown in the TCO card is the market-adjusted ML estimate. The net cost uses the actual asking price since that's what you pay.</p>
+    </div>
+    <div class="variance-box">
+      <div class="vb-title">⚠ Combined Uncertainty</div>
+      <p>M1 MAE ±₹52K + M3 MAE ±₹38K + M2 MAE ±₹7K = ~±₹65K on net TCO. Fuel, insurance, parking not included.</p>
+    </div>
+  </div>`;
+}
+
+function modalFairPriceRow(l, m) {
+  const adjPrice = m.adjusted_price || m.price_pred || m.fair_price_rule;
+  const rawPrice = m.price_pred;
+  const ratio = m.price_ratio;
+  const lp = l ? l.price : null;
+  const label = ratio < 0.70 ? 'Underpriced' : ratio <= 1.15 ? 'Fair Price' : 'Overpriced';
+  return `
+  <div class="modal-header">
+    <div class="modal-header-left">
+      <div class="modal-header-icon">🏷️</div>
+      <div>
+        <div class="modal-header-title">Price Assessment — Underpriced / Fair / Overpriced</div>
+        <div class="modal-header-sub">Adjusted fair price vs asking price</div>
+      </div>
+    </div>
+    <div class="modal-close" onclick="closeExplainModal()">✕</div>
+  </div>
+  <div class="modal-body">
+    <div class="modal-result-hero">
+      <div class="mrh-item"><label>Assessment</label><div class="mrh-val" style="color:${ratio<0.70?'var(--green)':ratio<=1.15?'var(--blue)':'var(--red)'}">${label}</div></div>
+      <div class="mrh-item"><label>Price Ratio</label><div class="mrh-val">${ratio}×</div><div class="mrh-sub">Listed ÷ Adjusted Fair Price</div></div>
+      <div class="mrh-item"><label>Asking vs Adjusted</label><div class="mrh-val" style="font-size:18px">${fmtL(lp)} vs ${fmtL(adjPrice)}</div></div>
+    </div>
+    <div class="explain-section">
+      ${sectionHead('Thresholds')}
+      <div class="formula-box">price_ratio = listed_price / adjusted_fair_price = ${ratio}×
+
+ratio < 0.70   → Underpriced  (opportunity or fraud risk)
+0.70 – 1.15  → Fair Price   (normal range)
+ratio > 1.15  → Overpriced  (negotiate down)</div>
+      ${rawPrice && rawPrice !== adjPrice ? `<p><strong>Note:</strong> ratio uses the adjusted price (₹${fmt(adjPrice)}), not the raw RF price (₹${fmt(rawPrice)}). The city tier and body type multipliers are baked in before comparison.</p>` : ''}
+    </div>
+  </div>`;
+}
+
+// ── Wire up clicks ────────────────────────────────────────────────────────────
+let _currentListing = null;
+
+const _origRenderDetail = renderDetail;
+renderDetail = function(l) {
+  _currentListing = l;
+  _origRenderDetail(l);
+  setTimeout(() => wireExplainClicks(l), 0);
+};
+
+const _origRenderSellerOutput = renderSellerOutput;
+renderSellerOutput = function(l) {
+  _currentListing = l;
+  _origRenderSellerOutput(l);
+  setTimeout(() => wireExplainClicksSeller(l), 0);
+};
+
+function wireExplainClicks(l) {
+  const cards = document.querySelectorAll('#buyer-main .model-card');
+  const keyMap = ['price','maintenance','depreciation','condition','fraud'];
+  cards.forEach((card, i) => {
+    card.onclick = (e) => { e.stopPropagation(); openExplainModal(keyMap[i], l); };
+  });
+  const tco = document.querySelector('#buyer-main .tco-card');
+  if (tco) tco.onclick = (e) => { e.stopPropagation(); openExplainModal('tco', l); };
+  const fpr = document.querySelector('#buyer-main .fair-price-row');
+  if (fpr) fpr.onclick = (e) => { e.stopPropagation(); openExplainModal('fairprice', l); };
+}
+
+function wireExplainClicksSeller(l) {
+  const cards = document.querySelectorAll('#seller-model-display .model-card');
+  const keyMap = ['price','maintenance','depreciation','condition','fraud'];
+  cards.forEach((card, i) => {
+    card.onclick = (e) => { e.stopPropagation(); openExplainModal(keyMap[i], l); };
+  });
+}
+
+document.getElementById('explain-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeExplainModal();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeExplainModal(); });
+</script>
+
+<!-- ═══ EXPLANATION MODAL ═══ -->
+<div class="modal-overlay" id="explain-modal">
+  <div class="modal-box" id="explain-modal-body"></div>
+</div>
+</body>
+</html>
