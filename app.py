@@ -17,28 +17,49 @@ except ImportError:
     OPENCV_AVAILABLE = False
     print("[CarIQ] WARNING: opencv-python-headless / pillow not installed.")
 
-# ── MODULE 1 & 3 — Load trained Random Forest models ─────────────────────────
-try:
-    import joblib, pandas as pd
-    _MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
-    _price_model      = joblib.load(os.path.join(_MODEL_DIR, "price_model.pkl"))
-    _depr_model       = joblib.load(os.path.join(_MODEL_DIR, "depreciation_model.pkl"))
-    _all_features     = joblib.load(os.path.join(_MODEL_DIR, "feature_cols.pkl"))
-    _num_cols         = joblib.load(os.path.join(_MODEL_DIR, "numerical_cols.pkl"))
-    _cat_cols         = joblib.load(os.path.join(_MODEL_DIR, "categorical_cols.pkl"))
-    _depr_config      = joblib.load(os.path.join(_MODEL_DIR, "depreciation_config.pkl"))
-    _brand_annual_km  = joblib.load(os.path.join(_MODEL_DIR, "brand_annual_km.pkl"))
-    _km_lookup        = _brand_annual_km.set_index(["brand", "fuel"])["avg_annual_km"].to_dict()
+# ── MODULE 1 & 3 — Lazy Load ML Models ───────────────────────────────────────
+import joblib
+import pandas as pd
+
+_MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
+_price_model = None
+_depr_model = None
+_all_features = None
+_num_cols = None
+_cat_cols = None
+_depr_config = None
+_brand_annual_km = None
+_km_lookup = {}
+_global_median_km = 15000
+_forecast_years = 2
+_current_year = 2026
+ML_MODELS_AVAILABLE = False
+
+
+def load_ml_models():
+    global _price_model, _depr_model, _all_features, _num_cols, _cat_cols
+    global _depr_config, _brand_annual_km, _km_lookup
+    global _global_median_km, _forecast_years, _current_year
+    global ML_MODELS_AVAILABLE
+
+    if ML_MODELS_AVAILABLE:
+        return
+
+    _price_model = joblib.load(os.path.join(_MODEL_DIR, "price_model.pkl"))
+    _depr_model = joblib.load(os.path.join(_MODEL_DIR, "depreciation_model.pkl"))
+    _all_features = joblib.load(os.path.join(_MODEL_DIR, "feature_cols.pkl"))
+    _num_cols = joblib.load(os.path.join(_MODEL_DIR, "numerical_cols.pkl"))
+    _cat_cols = joblib.load(os.path.join(_MODEL_DIR, "categorical_cols.pkl"))
+    _depr_config = joblib.load(os.path.join(_MODEL_DIR, "depreciation_config.pkl"))
+    _brand_annual_km = joblib.load(os.path.join(_MODEL_DIR, "brand_annual_km.pkl"))
+
+    _km_lookup = _brand_annual_km.set_index(["brand", "fuel"])["avg_annual_km"].to_dict()
     _global_median_km = _depr_config["global_median_km"]
-    _forecast_years   = _depr_config["forecast_years"]
-    _current_year     = _depr_config["current_year"]
+    _forecast_years = _depr_config["forecast_years"]
+    _current_year = _depr_config["current_year"]
+
     ML_MODELS_AVAILABLE = True
-    print("[CarIQ] ✓ Module 1 (price_model.pkl) loaded")
-    print("[CarIQ] ✓ Module 3 (depreciation_model.pkl) loaded")
-except Exception as _e:
-    ML_MODELS_AVAILABLE = False
-    pd = None
-    print(f"[CarIQ] WARNING: ML models not loaded ({_e})")
+    print("[CarIQ] ✓ ML models loaded on demand")
 
 # ── MARKET ADJUSTMENT CONFIG ──────────────────────────────────────────────────
 try:
@@ -197,6 +218,11 @@ def _rule_based_price(listing):
     return max(50000, int(base * age_factor * fuel_f - km_penalty - reg_risk))
 
 def get_fair_price_full(listing):
+    if not ML_MODELS_AVAILABLE:
+        try:
+            load_ml_models()
+        except Exception as e:
+            print(f"[CarIQ] ML model load failed: {e}")
     city      = listing.get("city", "")
     body_type = listing.get("body_type", "Other")
     if ML_MODELS_AVAILABLE:
@@ -258,7 +284,12 @@ def get_maintenance_cost(listing):
 
 # ── MODULE 3 ──────────────────────────────────────────────────────────────────
 def get_depreciation(listing, adjusted_fair_price):
-    if not ML_MODELS_AVAILABLE: return None, None, None
+    if not ML_MODELS_AVAILABLE:
+        try:
+            load_ml_models()
+        except Exception as e:
+            print(f"[CarIQ] ML model load failed: {e}")
+            return None, None, None
     try:
         brand     = str(listing.get("brand", "")).split()[0]
         fuel      = str(listing.get("fuel", "Petrol"))
@@ -405,7 +436,7 @@ def init_db():
     conn.commit()
     cur.execute("SELECT COUNT(*) FROM listings")
     count = cur.fetchone()[0]
-    if count == 0:
+    if count == 0 and False:
         seeds = [
             ("Maruti Suzuki","Swift VXi",      2019,42000,"Petrol","Mumbai",   520000,"Manual",   "Rahul M.", "buyer","Hatchback"),
             ("Hyundai",      "i20 Sportz",     2020,28000,"Petrol","Pune",     720000,"Manual",   "Priya S.", "buyer","Hatchback"),
